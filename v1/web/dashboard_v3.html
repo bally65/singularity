@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Singularity - Dream 1 Million Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background: #0b0e11; color: #e1e1e1; font-family: 'Courier New', monospace; margin: 0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: #1e2329; border-radius: 8px; padding: 20px; border-left: 5px solid #f0b90b; }
+        h1 { color: #f0b90b; text-transform: uppercase; letter-spacing: 2px; }
+        .metric { font-size: 2.5em; font-weight: bold; margin: 10px 0; }
+        .progress-container { background: #333; border-radius: 5px; height: 30px; margin: 20px 0; overflow: hidden;}
+        .progress-bar { background: linear-gradient(90deg, #f0b90b, #f8d33a); height: 100%; width: 0.9%; transition: width 1s; }
+        .status-tag { display: inline-block; padding: 5px 10px; border-radius: 4px; font-size: 0.8em; background: #27ae60; }
+        #log-terminal { background: black; color: #00ff00; height: 150px; overflow-y: scroll; padding: 10px; font-size: 0.8em; border: 1px solid #333; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Singularity: Road to 1 Million TWD</h1>
+    
+    <div class="grid">
+        <div class="card">
+            <h3>Simulation Equity (TWD)</h3>
+            <div class="metric" id="balance-display">9,000.00</div>
+            <div class="status-tag">SENTINEL ACTIVE</div>
+            <p>Target: 1,000,000 TWD</p>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0.9%"></div>
+            </div>
+            <p>Progress: 0.9%</p>
+        </div>
+        
+        <div class="card">
+            <h3>Market Intelligence (V3 AI)</h3>
+            <div id="whale-force-text">Whale Force: Waiting for Whale...</div>
+            <canvas id="volatilityChart" width="400" height="150"></canvas>
+        </div>
+    </div>
+
+    <h3 style="margin-top:30px;">🛡️ Sentinel Log (Live Diagnostics)</h3>
+    <div id="log-terminal">
+        [21:55:01] Sentinel Healer: Project A guarding engine PID 15824...<br>
+        [21:55:05] Intelligence: Scanning 283.6MB dataset for Alpha factors...<br>
+        [21:55:10] Security: Running Trivy vulnerability scan on Singularity...<br>
+    </div>
+
+    <script>
+        // Simple mock data for prototype
+        const ctx = document.getElementById('volatilityChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['1min', '2min', '3min', '4min', '5min'],
+                datasets: [{
+                    label: 'Market Volatility Index',
+                    data: [12, 19, 13, 17, 14],
+                    borderColor: '#f0b90b',
+                    tension: 0.4
+                }]
+            },
+            options: { scales: { y: { display: false }, x: { display: false } }, plugins: { legend: { display: false } } }
+        });
+    </script>
+</body>
+</html>

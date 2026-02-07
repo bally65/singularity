@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Singularity // Omni-Stream</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #030507;
+            --card-bg: rgba(13, 17, 23, 0.85);
+            --card-border: #1f6feb;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-cyan: #00f0ff;
+            --accent-pink: #ff0055;
+            --signal-green: #00ff9d;
+            --signal-red: #ff3333;
+            --neon-glow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image:
+                linear-gradient(rgba(31, 111, 235, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(31, 111, 235, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0;
+            overflow: hidden;
+            /* App-like feel */
+        }
+
+        header {
+            background: rgba(3, 5, 7, 0.95);
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            margin: 0;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .container {
+            max-width: 100%;
+            height: calc(100vh - 60px);
+            padding: 20px;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            border-radius: 4px;
+            /* Techy sharp corners */
+            padding: 15px;
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid var(--accent-cyan);
+            border-left: 2px solid var(--accent-cyan);
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 10px;
+            height: 10px;
+            border-bottom: 2px solid var(--accent-cyan);
+            border-right: 2px solid var(--accent-cyan);
+        }
+
+        .card-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            color: var(--accent-cyan);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .stat-item {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            color: #fff;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        .stat-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .signal-panel {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .signal-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 42px;
+            font-weight: 900;
+            margin: 0;
+            text-shadow: 0 0 20px currentColor;
+            /* Dynamic glow */
+        }
+
+        .signal-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .bullish {
+            color: var(--signal-green);
+            border: 1px solid var(--signal-green);
+            box-shadow: inset 0 0 20px rgba(0, 255, 157, 0.2);
+        }
+
+        .bearish {
+            color: var(--signal-red);
+            border: 1px solid var(--signal-red);
+            box-shadow: inset 0 0 20px rgba(255, 51, 51, 0.2);
+        }
+
+        .neutral {
+            color: #555;
+            border: 1px solid #333;
+        }
+
+        /* Liquidation Feed */
+        .liq-item {
+            font-size: 12px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .liq-long {
+            color: var(--signal-red);
+            text-shadow: 0 0 5px var(--signal-red);
+        }
+
+        .liq-short {
+            color: var(--signal-green);
+            text-shadow: 0 0 5px var(--signal-green);
+        }
+
+        /* Chart Containers */
+        .chart-container {
+            position: relative;
+            width: 100%;
+        }
+
+        #priceChartWrapper {
+            height: 60vh;
+        }
+
+        #pdfChartWrapper {
+            height: 25vh;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div
+                style="width: 10px; height: 10px; background: var(--accent-cyan); box-shadow: 0 0 10px var(--accent-cyan); border-radius: 50%;">
+            </div>
+            <h1>SINGULARITY <span style="font-size: 12px; color: var(--text-secondary); letter-spacing: 0;">// ENGINE
+                    VER. 1.0</span></h1>
+        </div>
+        <div style="font-size: 12px; font-family: 'Orbitron';">
+            SYS STATUS: <span style="color: var(--signal-green);">ONLINE</span> | <span
+                style="color: var(--accent-cyan);">RECORDING</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Main Panel (Charts) -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <!-- Price Chart -->
+            <div class="card" id="priceChartWrapper">
+                <div class="card-header">
+                    <span>BTC/USDT // Live Action</span>
+                    <span id="priceDisplay" style="color: #fff; font-size: 14px;">0.00</span>
+                </div>
+                <div style="height: 100%; width: 100%;"><canvas id="priceChart"></canvas></div>
+            </div>
+
+            <!-- Volatility / PDF Chart -->
+            <div class="card" id="pdfChartWrapper">
+                <div class="card-header">
+                    <span>Probability Density Function (Next 60s)</span>
+                    <span style="font-size: 10px; opacity: 0.7;">GAUSSIAN PROJECTION</span>
+                </div>
+                <div style="height: 100%; width: 100%;"><canvas id="pdfChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar (Metrics) -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+
+            <!-- Signal Box -->
+            <div class="card">
+                <div class="card-header">AI Inference</div>
+                <div id="signalPanel" class="signal-panel neutral">
+                    <div class="signal-sub">PREDICTION</div>
+                    <div id="signalText" class="signal-text">WAIT</div>
+                    <div id="confText" class="signal-sub">CONFIDENCE: --%</div>
+                </div>
+                <!-- Pattern Recognition Extension -->
+                <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0,240,255,0.1);">
+                    <div class="stat-desc">Pattern Intuition</div>
+                    <div id="patternText" style="font-size: 14px; color: var(--accent-pink); margin-top: 5px; font-weight: bold;">[SCANNING]</div>
+                </div>
+            </div>
+
+            <!-- Portfolio Box -->
+            <div class="card">
+                <div class="card-header">Portfolio // Paper</div>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-desc">Balance<br><span style="font-size: 9px; opacity: 0.5;">USDT</span></div>
+                        <div id="balanceVal" class="stat-val" style="color: var(--signal-green); font-size: 20px;">100,000.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Physics Meters -->
+            <div class="card">
+                <div class="card-header">Physics Engine</div>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-desc">Entropy (S)<br><span style="font-size: 9px; opacity: 0.5;">CHAOS
+                                METRIC</span></div>
+                        <div id="entropyVal" class="stat-val" style="color: var(--accent-pink);">--</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-desc">Accel (a)<br><span style="font-size: 9px; opacity: 0.5;">MOMENTUM</span>
+                        </div>
+                        <div id="accelVal" class="stat-val" style="color: var(--accent-cyan);">--</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-desc">Mass (m)<br><span style="font-size: 9px; opacity: 0.5;">RESISTANCE</span>
+                        </div>
+                        <div id="massVal" class="stat-val">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liquidation Feed -->
+            <div class="card" style="flex-grow: 1;">
+                <div class="card-header">REKT Feed // Liquidations</div>
+                <div id="liqList"
+                    style="height: 100%; overflow-y: hidden; display: flex; flex-direction: column-reverse; gap: 5px;">
+                    <div class="liq-item" style="color: #444; text-align: center; font-style: italic;">Scanning
+                        blockchain...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Chart Configuration for Sci-Fi Look ---
+        Chart.defaults.color = '#444';
+        Chart.defaults.font.family = '"JetBrains Mono", monospace';
+
+        const commonOptions = {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    display: true,
+                    grid: { color: 'rgba(0, 240, 255, 0.05)' },
+                    ticks: { color: '#444', maxTicksLimit: 6 }
+                },
+                y: {
+                    position: 'right',
+                    grid: { color: 'rgba(0, 240, 255, 0.05)' },
+                    ticks: { color: '#00f0ff' }
+                }
+            }
+        };
+
+        // Price Chart
+        const pCtx = document.getElementById('priceChart').getContext('2d');
+        const priceGradient = pCtx.createLinearGradient(0, 0, 0, 400);
+        priceGradient.addColorStop(0, 'rgba(0, 240, 255, 0.2)');
+        priceGradient.addColorStop(1, 'rgba(0, 240, 255, 0)');
+
+        const priceChart = new Chart(pCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Price',
+                    data: [],
+                    borderColor: '#00f0ff',
+                    backgroundColor: priceGradient,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: true,
+                    tension: 0.1,
+                    shadowBlur: 10,
+                    shadowColor: '#00f0ff' // requires extension or custom plugin usually, but native canvas glow works via CSS mostly
+                }]
+            },
+            options: commonOptions
+        });
+
+        // PDF Chart
+        const pdfCtx = document.getElementById('pdfChart').getContext('2d');
+        const pdfChart = new Chart(pdfCtx, {
+            type: 'line',
+            data: {
+                datasets: [
+                    {
+                        label: 'Probability',
+                        data: [],
+                        borderColor: '#555',
+                        backgroundColor: 'rgba(100, 100, 100, 0.1)',
+                        borderWidth: 1,
+                        fill: true,
+                        pointRadius: 0,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Current',
+                        data: [],
+                        pointRadius: 4,
+                        pointBackgroundColor: '#00f0ff',
+                        pointBorderColor: '#fff'
+                    }
+                ]
+            },
+            options: { ...commonOptions, scales: { x: { display: false }, y: { display: false } } }
+        });
+
+        // WebSocket Logic
+        const ws = new WebSocket("ws://" + window.location.host + "/ws");
+        const liqList = document.getElementById('liqList');
+
+        function gaussian(x, mu, sigma) {
+            return (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2));
+        }
+
+        ws.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+
+            if (data.Price) {
+                // Update Title
+                document.title = `BTC: ${data.Price.toFixed(2)} | Singularity`;
+                document.getElementById('priceDisplay').innerText = data.Price.toFixed(2);
+
+                const now = new Date();
+                const timeStr = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+
+                // Keep chart buffer
+                if (priceChart.data.labels.length > 300) {
+                    priceChart.data.labels.shift();
+                    priceChart.data.datasets[0].data.shift();
+                }
+                priceChart.data.labels.push(timeStr);
+                priceChart.data.datasets[0].data.push(data.Price);
+                priceChart.update('none'); // 'none' for performance
+
+                // Update PDF
+                if (data.Mu && data.Sigma) {
+                    const range = data.Sigma * 4.0;
+                    const points = [];
+                    // Generate bell curve points
+                    for (let x = data.Mu - range; x <= data.Mu + range; x += range / 20) {
+                        points.push({ x: x, y: gaussian(x, data.Mu, data.Sigma) });
+                    }
+                    pdfChart.data.datasets[0].data = points;
+                    pdfChart.data.datasets[1].data = [{ x: data.Price, y: 0 }]; // Just a dot on X axis? Y needs match
+                    // Ideally normalize Y to match probability scale
+                    // For visualization, we just place the dot at y=0 or y=max probability
+                    const maxProb = gaussian(data.Mu, data.Mu, data.Sigma);
+                    pdfChart.data.datasets[1].data = [{ x: data.Price, y: maxProb * 0.5 }];
+                    pdfChart.update('none');
+                    document.getElementById('confText').innerText = "VOLATILITY: ±" + data.Sigma.toFixed(2);
+                }
+
+                // Update Meters
+                document.getElementById('accelVal').innerText = data.Accel ? data.Accel.toFixed(2) : "0.00";
+                if (data.Mass) document.getElementById('massVal').innerText = (data.Mass / 1000).toFixed(1) + "k";
+                if (data.Balance) document.getElementById('balanceVal').innerText = data.Balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
+            }
+
+            if (data.Pattern) {
+                document.getElementById('patternText').innerText = data.Pattern;
+                document.getElementById('patternText').style.textShadow = "0 0 10px var(--accent-pink)";
+            }
+
+            if (data.Entropy) {
+                const val = data.Entropy.toFixed(3);
+                document.getElementById('entropyVal').innerText = val;
+                // Color change based on entropy
+                const el = document.getElementById('entropyVal');
+                if (data.Entropy > 4.5) el.style.color = "#ff3333"; // High chaos
+                else el.style.color = "#00f0ff"; // Organized
+            }
+
+            if (data.Signal) {
+                const sp = document.getElementById('signalPanel');
+                if (data.Signal === 'LONG') {
+                    document.getElementById('signalText').innerText = "BUY";
+                    sp.className = 'signal-panel bullish';
+                    document.body.style.boxShadow = "inset 0 0 50px rgba(0, 255, 157, 0.1)"; // Screen flash
+                } else if (data.Signal === 'SHORT') {
+                    document.getElementById('signalText').innerText = "SELL";
+                    sp.className = 'signal-panel bearish';
+                    document.body.style.boxShadow = "inset 0 0 50px rgba(255, 51, 51, 0.1)";
+                } else {
+                    document.getElementById('signalText').innerText = "WAIT";
+                    sp.className = 'signal-panel neutral';
+                    document.body.style.boxShadow = "none";
+                }
+            }
+
+            // Liquidation Event
+            if (data.LiqSize && data.LiqSize > 0) {
+                const item = document.createElement('div');
+                item.className = 'liq-item';
+                const sideText = data.LiqSide === 1 ? "SHORT REKT" : "LONG REKT";
+                const sideClass = data.LiqSide === 1 ? "liq-short" : "liq-long";
+                const sizeK = (data.LiqSize / 1000).toFixed(1) + "k";
+
+                item.innerHTML = `<span style="opacity:0.6">${new Date().toLocaleTimeString()}</span> <span class="${sideClass}" style="letter-spacing:1px;">${sideText} // $${sizeK}</span>`;
+                liqList.prepend(item); // Add to top
+
+                // Cleanup
+                while (liqList.children.length > 20) {
+                    liqList.removeChild(liqList.lastChild);
+                }
+            }
+        };
+    </script>
+</body>
+
+</html>

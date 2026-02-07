@@ -1,0 +1,8 @@
+torch>=2.0.0
+pandas
+numpy
+onnx
+onnxruntime
+scikit-learn
+matplotlib
+requests

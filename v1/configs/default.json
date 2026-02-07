@@ -1,0 +1,21 @@
+{
+  "engine": {
+    "symbol": "BTCUSDT",
+    "window_size_ms": 1000,
+    "max_history_size": 300,
+    "recording_enabled": true,
+    "onnx_model_path": "singularity.onnx"
+  },
+  "strategy": {
+    "initial_balance_usd": 100000.0,
+    "order_size_btc": 0.1,
+    "confidence_threshold": 0.85,
+    "accel_threshold": 150.0,
+    "imbalance_threshold": 0.35,
+    "cooldown_seconds": 5
+  },
+  "telemetry": {
+    "port": 8088,
+    "enable_discord": true
+  }
+}
