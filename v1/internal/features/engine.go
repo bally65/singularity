@@ -1,7 +1,6 @@
 package features
 
 import (
-	"fmt"
 	"math"
 	"singularity/internal/core"
 	"time"
@@ -64,6 +63,7 @@ func (e *Engine) UpdateLiquidation(t core.Trade) {
 
 func NewEngine(modelPath string) *Engine {
 	var m *Model
+	/*
 	if modelPath != "" {
 		var err error
 		m, err = NewModel(modelPath)
@@ -73,6 +73,7 @@ func NewEngine(modelPath string) *Engine {
 			fmt.Println("✅ ML model loaded successfully.")
 		}
 	}
+	*/
 	
 	return &Engine{
 		windowSize: 1 * time.Second, 

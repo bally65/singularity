@@ -35,14 +35,14 @@ func (s *StrategyEngine) ProcessState(symbol string, price float64, feat *Featur
 	// 2. If Price Acceleration confirms the move
 	// 3. If Order Imbalance matches
 	
-	if feat.PriceAccel > 150 && feat.OrderImbalance > 0.3 {
+	if feat.PriceAccel > 50 {
 		// Aggressive Long
 		err := s.backtester.ExecutePaperTrade(symbol, core.Buy, price, s.config.MaxPositionSize)
 		if err == nil {
 			s.lastAction = time.Now()
 			fmt.Printf(" [STRATEGY] Executed LONG on %s at %.2f\n", symbol, price)
 		}
-	} else if feat.PriceAccel < -150 && feat.OrderImbalance < -0.3 {
+	} else if feat.PriceAccel < -50 {
 		// Aggressive Short
 		err := s.backtester.ExecutePaperTrade(symbol, core.Sell, price, s.config.MaxPositionSize)
 		if err == nil {
