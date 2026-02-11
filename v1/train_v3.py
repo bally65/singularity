@@ -62,14 +62,14 @@ class SingularityV3Model(nn.Module):
 def prepare_data(csv_path):
     if not os.path.exists(csv_path):
         return None, None
-    df = pd.read_csv(csv_path).dropna()
+    df = pd.read_csv(csv_path, low_memory=False).apply(pd.to_numeric, errors="coerce").dropna()
     if len(df) < 500: return None, None
     
     data = df[FEATURE_COLS].values
     labels = df[TARGET_COL].values
     
     # Simple normalization
-    data = (data - data.mean(axis=0)) / (data.std(axis=0) + 1e-6)
+    data = (data - np.nanmean(data, axis=0)) / (np.nanstd(data, axis=0) + 1e-6)
     
     X, Y = [], []
     for i in range(len(data) - SEQ_LENGTH):
@@ -107,8 +107,10 @@ def train():
             optimizer.step()
             total_loss += loss.item()
         
-        if (epoch+1) % 5 == 0:
-            print(f"Epoch {epoch+1}/{EPOCHS} | Loss: {total_loss/len(train_loader):.6f}")
+        print(f"Epoch {epoch+1}/{EPOCHS} | Loss: {total_loss/len(train_loader):.6f}", flush=True)
+        # Periodic save
+        if (epoch+1) % 10 == 0:
+             torch.save(model.state_dict(), f"singularity_v3_epoch_{epoch+1}.pth")
 
     # Export
     model.eval()
