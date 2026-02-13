@@ -1,13 +1,16 @@
-use futures_util::{StreamExt, SinkExt};
+use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 use std::io::Write;
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use url::Url;
 use chrono::Utc;
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct BinanceTrade {
+    #[serde(rename = "s")]
+    symbol: String,
     #[serde(rename = "E")]
     event_time: u64,
     #[serde(rename = "p")]
@@ -21,31 +24,39 @@ struct BinanceTrade {
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    println!("🚀 Starting Singularity Engine V2 (Rust)...");
+    println!("🚀 Starting Singularity Engine V2 Multi-Asset (Rust)...");
 
-    let url = Url::parse("wss://fstream.binance.com/ws/btcusdt@trade").unwrap();
+    // Subscribing to BTC, ETH, and SOL
+    let url = Url::parse("wss://fstream.binance.com/ws/btcusdt@trade/ethusdt@trade/solusdt@trade").unwrap();
     
     loop {
-        println!("📡 Connecting to Binance...");
+        println!("📡 Connecting to Binance Multi-Stream...");
         match connect_async(url.clone()).await {
             Ok((mut ws_stream, _)) => {
                 println!("✅ Connected.");
                 
-                let mut file = OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open("dataset_v2.csv")
-                    .unwrap();
+                // We'll keep symbols in separate files for easier processing by Python scripts
+                let mut files = HashMap::new();
 
                 while let Some(msg) = ws_stream.next().await {
                     match msg {
                         Ok(Message::Text(text)) => {
                             if let Ok(trade) = serde_json::from_str::<BinanceTrade>(&text) {
                                 let now = Utc::now().timestamp_millis();
+                                let filename = format!("dataset_{}.csv", trade.symbol.to_lowercase());
+                                
+                                let file = files.entry(trade.symbol.clone()).or_insert_with(|| {
+                                    OpenOptions::new()
+                                        .create(true)
+                                        .append(true)
+                                        .open(&filename)
+                                        .unwrap()
+                                });
+
                                 let line = format!("{},{},{},{},{}\n", 
                                     now, trade.event_time, trade.price, trade.quantity, trade.is_buyer_maker);
                                 if let Err(e) = file.write_all(line.as_bytes()) {
-                                    eprintln!("❌ Write error: {}", e);
+                                    eprintln!("❌ Write error for {}: {}", trade.symbol, e);
                                 }
                             }
                         }

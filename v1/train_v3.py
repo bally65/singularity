@@ -78,7 +78,7 @@ def prepare_data(csv_path):
     
     return np.array(X), np.array(Y)
 
-def train():
+def train(resume=False):
     X, Y = prepare_data('dataset.csv')
     if X is None:
         print("❌ Not enough data in dataset.csv to train V3.")
@@ -91,11 +91,27 @@ def train():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SingularityV3Model(len(FEATURE_COLS)).to(device)
-    optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE)
+    
+    if resume and os.path.exists("singularity_v3_latest.pth"):
+        model.load_state_dict(torch.load("singularity_v3_latest.pth"))
+        print("🔄 Resuming from existing weights...")
+
+    # Load adaptive config if exists
+    config_path = "training_config.json"
+    actual_lr = LEARNING_RATE
+    if os.path.exists(config_path):
+        import json
+        with open(config_path, 'r') as f:
+            actual_lr = json.load(f).get("learning_rate", LEARNING_RATE)
+            print(f"🧠 Using Adaptive Learning Rate: {actual_lr:.6f}")
+
+    optimizer = optim.AdamW(model.parameters(), lr=actual_lr)
     criterion = nn.HuberLoss() # More robust to outliers in price data
 
     print(f"🚀 Training V3 on {device}...")
-    for epoch in range(EPOCHS):
+    epochs_to_run = 5 if resume else EPOCHS # Short fine-tune if iterating
+    
+    for epoch in range(epochs_to_run):
         model.train()
         total_loss = 0
         for x, y in train_loader:
@@ -107,16 +123,18 @@ def train():
             optimizer.step()
             total_loss += loss.item()
         
-        print(f"Epoch {epoch+1}/{EPOCHS} | Loss: {total_loss/len(train_loader):.6f}", flush=True)
-        # Periodic save
-        if (epoch+1) % 10 == 0:
-             torch.save(model.state_dict(), f"singularity_v3_epoch_{epoch+1}.pth")
+        print(f"Epoch {epoch+1}/{epochs_to_run} | Loss: {total_loss/len(train_loader):.6f}", flush=True)
+
+    # Save weights for next iteration
+    torch.save(model.state_dict(), "singularity_v3_latest.pth")
 
     # Export
     model.eval()
     dummy = torch.randn(1, SEQ_LENGTH, len(FEATURE_COLS)).to(device)
     torch.onnx.export(model, dummy, "singularity_v3.onnx", input_names=['input'], output_names=['output'])
-    print("✅ V3 Model Trained and Exported to singularity_v3.onnx")
+    print("✅ V3 Model Optimized and Exported to singularity_v3.onnx")
 
 if __name__ == "__main__":
-    train()
+    import sys
+    do_resume = "--resume" in sys.argv
+    train(resume=do_resume)
